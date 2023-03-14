@@ -1,19 +1,27 @@
 import express from "express";
+import http from "http";
+import { Server } from "socket.io";
 import morgan from "morgan";
 import bodyparser from "body-parser";
 import cors from "cors";
 import helmet from "helmet";
 import mongoose from "mongoose";
 import { userController } from "./controllers/user.controller";
+
 import { exceptionFilter } from "./commons/errors/exception.filter";
 import { config } from "./commons/config";
+import { roomController } from "./controllers/room.controller";
 
 export class App {
    app = express();
+   server = http.createServer(this.app);
+   io = new Server(this.server)
+
    PORT = config.app.port;
 
    useRoutes() {
       this.app.use("/users", userController.router);
+      this.app.use("/rooms", roomController.router);
    }
 
    useMiddlewares() {
@@ -28,7 +36,7 @@ export class App {
 
    async initDb() {
       mongoose.set('strictQuery', false);
-      await mongoose.connect(`mongodb://${config.db.host}:${config.db.port}/${config.db.dbName}`);
+      await mongoose.connect(process.env.DB_LINK!);
       console.log("MongoDB connection established successfully");
    };
 
@@ -38,7 +46,16 @@ export class App {
       await this.initDb();
 
       this.app.use(exceptionFilter.catch.bind(exceptionFilter));
-      this.app.listen(this.PORT, () => {
+
+      this.io.on("connection", (socket) => {
+         console.log(`User connected: ${socket.id}`);
+
+         socket.on("disconnect", () => {
+            console.log(`User disconnected: ${socket.id}`);
+         });
+      });
+
+      this.server.listen(this.PORT, () => {
          console.log(`Server listening on port ${this.PORT}`);
       });
 

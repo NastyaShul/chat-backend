@@ -4,6 +4,7 @@ import { userService } from "../services/user.services";
 import { userRegisterSchema, userUpdateSchema } from "../commons/validation/user.validation";
 import { Types } from "mongoose";
 import { AuthenticatedRequest } from "../commons/types-and-interfaces";
+import { chatRoomSchema } from "../commons/validation/room.validation";
 
 export class UserController extends BaseController {
    constructor() {
@@ -32,6 +33,7 @@ export class UserController extends BaseController {
             path: "/:userId",
             method: "patch",
             authRequired: true,
+            extractUserId: true,
             validators: {
                body: userUpdateSchema
             },
@@ -42,6 +44,22 @@ export class UserController extends BaseController {
             method: "delete",
             authRequired: true,
             handler: this.deleteUserProfile
+         },
+         {
+            path: "/rooms",
+            method: "post",
+            authRequired: true,
+            extractUserId: true,
+            validators: {
+               body: chatRoomSchema
+            },
+            handler: this.createRoom
+         },
+         {
+            path: "/rooms",
+            method: "get",
+            authRequired: true,
+            handler: this.getRooms
          },
       ])
    }
@@ -74,6 +92,19 @@ export class UserController extends BaseController {
       const { userId } = req.params;
       const user = await userService.deleteUserProfile(new Types.ObjectId(userId));
       res.send("User profile successfully deleted");
+   }
+
+   createRoom = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+      const { name, description } = req.body;
+      const { userId } = req;
+
+      const room = await userService.createRoom(name, description, new Types.ObjectId(userId));
+      res.send(`Room created successfully: ${room}`);
+   }
+
+   getRooms = async (req: Request, res: Response, next: NextFunction) => {
+      const response = await userService.getRooms();
+      res.send(response);
    }
 
 }

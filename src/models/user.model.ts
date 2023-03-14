@@ -9,7 +9,7 @@ import { Types } from "mongoose";
 })
 export class User {
    @prop({ id: true })
-   id!: Types.ObjectId;
+   _id!: Types.ObjectId;
 
    @prop({ required: true })
    username!: string;

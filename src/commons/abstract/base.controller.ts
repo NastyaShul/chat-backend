@@ -2,7 +2,7 @@ import { Request, Response, NextFunction, Router } from "express";
 import { Logger } from "tslog";
 import { ValidationError } from "../errors/validation.error";
 import { IControllerRoute, Validation } from './../types-and-interfaces';
-import { authMiddleware } from "../middlewares/auth.middleware";
+import { authMiddleware, extractUserIdFromToken } from "../middlewares/auth.middleware";
 
 export abstract class BaseController {
    private readonly _router = Router();
@@ -22,6 +22,9 @@ export abstract class BaseController {
          }
          if (route.authRequired) {
             pipeline.push(authMiddleware);
+         }
+         if (route.extractUserId) {
+            pipeline.push(extractUserIdFromToken);
          }
          this.router[route.method](route.path, pipeline, handler);
       }

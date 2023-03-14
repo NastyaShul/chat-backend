@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction, Router } from "express";
 import { HttpError } from "./errors/http.error";
-import { authMiddleware } from "./middlewares/auth.middleware";
 
 export interface IExceptionFilter {
    catch(
@@ -17,6 +16,7 @@ export interface IControllerRoute {
    handler: (req: Request, res: Response, next: NextFunction) => void;
    validators?: Validation;
    authRequired?: boolean;
+   extractUserId?: boolean;
 }
 
 export interface IConfig {
@@ -38,6 +38,11 @@ export interface UpdateUserParams {
 
 export interface AuthenticatedRequest extends Request {
    user?: any;
+   userId?: string;
 }
+
+export interface DecodedToken {
+   userId: string;
+ }
 
 export type Validation = Record<string, any>;
